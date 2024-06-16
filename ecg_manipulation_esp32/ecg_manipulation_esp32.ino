@@ -2,7 +2,7 @@
 #include <PubSubClient.h>
 #include <ESP32Servo.h>
 
-Servo my_servo_01;
+Servo servo;
 
 const char *ssid = "stud-hshl"; 
 const char *password = "stud-hshl2024"; 
@@ -10,12 +10,35 @@ const char *password = "stud-hshl2024";
 const char *mqtt_broker = "10.67.193.84";
 const int mqtt_port = 1883;
 
-int angle = 0;    
-int servo_01 = 13;
-int servo_02 = 12;
-bool standing = false;
+int heart_rate_pot = 15; 
 
-WiFiClient espClient;
+int servo_angle = 0;     
+int servo_pin = 13; 
+
+int breath_led_01 = 12; 
+int breath_led_02 = 14; 
+int breath_led_03 = 27; 
+int breath_led_04 = 26; 
+int breath_led_05 = 25; 
+int breath_led_06 = 33; 
+
+int normal_button = 6; 
+int tachycardia_button = 7; 
+int bradycardia_button = 8; 
+int fibrillation_button = 15; 
+int flutter_button = 2; 
+
+bool normal = true; 
+bool tachycardia = false; 
+bool bradycardia = false; 
+bool fibrillation = false; 
+bool flutter = false; 
+
+String type = "normal";
+bool standing = false;
+int heart_rate = 0; 
+
+WiFiClient espClient; 
 PubSubClient client(espClient);
 
 void setup() 
@@ -26,9 +49,9 @@ void setup()
 	  ESP32PWM::allocateTimer(1);
 	  ESP32PWM::allocateTimer(2);
 	  ESP32PWM::allocateTimer(3);
-	  my_servo_01.setPeriodHertz(50);    
-	  my_servo_01.attach(servo_01, 1000, 2000); 
-    my_servo_01.write(0);
+	  servo.setPeriodHertz(50); 
+	  servo.attach(servo_pin, 1000, 2000);  
+    servo.write(0);
 
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) 
@@ -38,7 +61,6 @@ void setup()
     }
     Serial.println("Connected to Wi-Fi");
 
-    //connecting to a mqtt broker
     client.setServer(mqtt_broker, mqtt_port);
     client.setCallback(callback);
     while (!client.connected()) {
@@ -58,24 +80,30 @@ void setup()
     client.subscribe("position");
 }
 
+void move_servo(int start_angle, int end_angle, int step)
+{
+  for (int angle = start_angle; angle != end_angle; angle += step) 
+  { 
+    servo.write(angle);   
+    delay(5);             
+  }
+}
+
 void stand_up()
 {
-  for (angle = 180; angle >= 0; angle -= 1) 
-  { 
-		my_servo_01.write(angle);   
-		delay(5);             
-	}
+  move_servo(180, 0, -1);
   standing = true;
 }
 
 void lay_down()
 {
-  for (angle = 0; angle <= 180; angle += 1) 
-  {  
-		my_servo_01.write(angle);   
-		delay(5);             
-	}
+  move_servo(0, 180, 1);
   standing = false;
+}
+
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) 
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 void callback(char *topic, byte *payload, unsigned int length) 
@@ -83,34 +111,93 @@ void callback(char *topic, byte *payload, unsigned int length)
   Serial.print("Message arrived in topic: ");
   Serial.println(topic);
 
-  char message[length + 1];  
+  char message[length + 1];
   memcpy(message, payload, length);
-  message[length] = '\0';    
+  message[length] = '\0';
 
-  String strPayload = String(message);
-  Serial.print("Message: ");
-  Serial.println(strPayload);
-
-  if (strPayload == "standing")
+  if (strcmp(topic, "change_position") == 0)  
   {
-    if (!standing)
+    change_position(message);
+  }
+  else if (strcmp(topic, "rsp_signal") == 0)
+  {
+    float signal_value = atof(message);
+    int led_level = mapFloat(signal_value, -0.4, 0.4, 0, 6); 
+    breathing_leds(led_level);
+  }
+}
+
+void change_position(String message)
+{
+  String strPayload = String(message);
+    if (strPayload == "standing")
     {
-      stand_up();
+      if (!standing)
+      {
+        stand_up();
+      }
+    }
+    else if (strPayload == "laying")
+    {
+      if (standing)
+      {
+        lay_down(); 
+      }
+    }
+}
+
+void breathing_leds(int breath_rate)
+{
+  const int led_pins[] = {breath_led_01, breath_led_02, breath_led_03, breath_led_04, breath_led_05, breath_led_06};
+  const int num_leds = sizeof(led_pins) / sizeof(led_pins[0]);
+  
+  for (int i = 0; i < num_leds; ++i)
+  {
+    if (i < breath_rate)
+    {
+      digitalWrite(led_pins[i], HIGH);
+    }
+    else
+    {
+      digitalWrite(led_pins[i], LOW);
     }
   }
-  else if (strPayload == "laying")
+}
+
+String check_type()
+{
+  if (normal)
   {
-    if (standing)
-    {
-      lay_down(); 
-    }
+    return "normal";
+  }
+  if (tachycardia_button)
+  {
+    return "tachycardia";
+  }
+  if (bradycardia_button)
+  {
+    return "bradycardia";
+  }
+  if (fibrillation_button)
+  {
+    return "fibrillation";
+  }
+  if (flutter_button)
+  {
+    return "flutter";
   }
 }
 
 void loop() 
 {
-  client.loop();
-
+  client.loop(); 
+  heart_rate = map(analogRead(heart_rate_pot),0,1023,60,120); 
+  if (normal_button || tachycardia_button || bradycardia_button || fibrillation_button || flutter_button == 1)
+  {
+    type = check_type();
+  }
+  client.publish("type_manipulation", type.c_str()); 
+  client.publish("heart_rate_manipulation", String(heart_rate).c_str()); 
 }
 
 

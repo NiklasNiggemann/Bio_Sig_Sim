@@ -18,14 +18,14 @@ client = mqtt.Client()
 
 def publish_ecg_signal(ecg_signal, client):
     for i, value in enumerate(ecg_signal):
-        client.publish("/generated_ecg_signal", str(value))
+        client.publish("python_generated_ecg", str(value))
         time.sleep(0.009)
         print(f"ECG: {value}")
 
 
 def publish_rsp_signal(rsp_signal, client):
     for i, value in enumerate(rsp_signal):
-        client.publish("/generated_rsp_signal", str(value))
+        client.publish("python_generated_rsp", str(value))
         time.sleep(0.009)
         print(f"RSP: {value}")
 
@@ -44,7 +44,7 @@ def generate_signal():
     try:
         data = request.get_json()
         ecg_type = data.get("ecg_type")
-        heart_rate = data.get("heart_rate", 70)  # default heart rate
+        heart_rate = data.get("heart_rate")
 
         ecg_signal = []
 
@@ -80,7 +80,7 @@ def generate_signal():
         ecg_thread.join()
         rsp_thread.join()
 
-        client.publish("/python_generated_signal", "done")
+        client.publish("python_generated_ecg", "done")
 
         return jsonify({"status": "done"}), 200
     except Exception as e:

@@ -15,7 +15,6 @@ PubSubClient client(espClient);
 HardwareSerial SerialPico(2);
 
 int led_pin = 0;
-int tilt_power_pin = 23; 
 int tilt_pin = 22; 
 int piezo_pin = 15; 
 
@@ -102,5 +101,5 @@ void peak_alarm()
     digitalWrite(led_pin, HIGH);
     delay(20);
     digitalWrite(led_pin, LOW);
-    noTone(piezo_pin);
+    tone(piezo_pin, 0);
 }
