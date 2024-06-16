@@ -6,7 +6,7 @@ import pandas as pd
 import threading
 import random
 import time
-import ecg
+import create_bio_signals
 
 
 app = Flask(__name__)
@@ -50,21 +50,21 @@ def generate_signal():
 
         match ecg_type:
             case "normal":
-                ecg_signal = ecg.normal(heart_rate=heart_rate)
+                ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
                 rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/4, method="sinusoidal")
             case "tachycardia":
                 heart_rate = random.randint(100, 110)
-                ecg_signal = ecg.normal(heart_rate=heart_rate)
+                ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
                 rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/4, method="sinusoidal")
             case "bradycardia":
                 heart_rate = random.randint(50, 60)
-                ecg_signal = ecg.normal(heart_rate=heart_rate)
+                ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
                 rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/4, method="sinusoidal")
             case "atrial_fibrillation":
-                ecg_signal = ecg.atrial_fibrillation()
+                ecg_signal = create_bio_signals.atrial_fibrillation()
                 rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/5.8, method="sinusoidal")
             case "atrial_flutter":
-                ecg_signal = ecg.atrial_flutter()
+                ecg_signal = create_bio_signals.atrial_flutter()
                 rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/5.6, method="sinusoidal")
             case _:
                 return jsonify({"error": "Invalid ECG type"}), 400

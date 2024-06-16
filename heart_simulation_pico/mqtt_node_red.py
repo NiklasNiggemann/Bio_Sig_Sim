@@ -1,33 +1,34 @@
-# Bibliotheken laden
 import machine
 import network
 import time
+import json
 from umqtt_simple import MQTTClient
+from machine import UART, Pin
 
 # WLAN-Konfiguration
-wlanSSID = 'WLANSSID'
-wlanPW = 'WLANPASSWORD'
+wlanSSID = 'stud-hshl'
+wlanPW = 'stud-hshl2024'
 network.country('DE')
 
-# MQTT-Konfiguration
-mqttBroker = '192.168.0.10'
+mqttBroker = '10.67.193.84'
 mqttClient = 'pico'
-mqttUser = 'mqttuser'
-mqttPW = ''
-mqttTopic = b"button"
+mqttTopic = b"send_ecg_signal"
 
-# Status-LED für die WLAN-Verbindung
+uart = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))
 led_onboard = machine.Pin('LED', machine.Pin.OUT, value=0)
 
-# Callback-Funktion: Empfang einer MQTT-Nachricht
-def mqttDo(topic, msg):
-    # Onboard-LED-Toggle
-    led_onboard.toggle()
-    # MQTT-Nachricht ausgeben
-    print("Topic: %s, Wert: %s" % (topic, msg))
-    print()
+received_signal = None
 
-# Funktion: WLAN-Verbindung herstellen
+def mqttDo(topic, msg):
+    led_onboard.toggle()
+    time.sleep(1)
+    print((topic, msg))
+    array = json.loads(msg)
+    print("Empfangenes Array:", array)
+    for value in array:
+        print("Einzelner Wert:", value)
+
+
 def wlanConnect():
     wlan = network.WLAN(network.STA_IF)
     if not wlan.isconnected():
@@ -49,14 +50,10 @@ def wlanConnect():
         print()
         led_onboard.off()
 
-# Funktion: Verbindung zum MQTT-Server herstellen
+
 def mqttConnect():
-    if mqttUser != '' and mqttPW != '':
-        print("MQTT-Verbindung herstellen: %s mit %s als %s" % (mqttClient, mqttBroker, mqttUser))
-        client = MQTTClient(mqttClient, mqttBroker, user=mqttUser, password=mqttPW, keepalive=60)
-    else:
-        print("MQTT-Verbindung herstellen: %s mit %s" % (mqttClient, mqttBroker))
-        client = MQTTClient(mqttClient, mqttBroker, keepalive=60)
+    print("MQTT-Verbindung herstellen: %s mit %s" % (mqttClient, mqttBroker))
+    client = MQTTClient(mqttClient, mqttBroker, keepalive=60)
     client.set_callback(mqttDo)
     client.connect()
     print()
@@ -64,18 +61,22 @@ def mqttConnect():
     print()
     return client
 
-# WLAN-Verbindung herstellen
 wlanConnect()
+client = mqttConnect()
+client.subscribe(topic=mqttTopic)
 
-# MQTT-Verbindungsaufbau
+def wait_for_array():
+    global received_signal
+    while received_signal is None:
+        client.wait_msg()
+    return received_signal
+
 try:
-    client = mqttConnect()
-    client.subscribe(topic=mqttTopic)
-    print("Subscribe: %s" %  mqttTopic)
-    print()
-    # Warten auf Nachrichten
     while True:
         client.check_msg()
         time.sleep(1)
 except OSError:
     print('Fehler: Keine MQTT-Verbindung')
+    
+
+    
