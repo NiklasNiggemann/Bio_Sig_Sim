@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.12 (ecg_rsp_signal_generation_processing)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (ecg_rsp_signal_generation_processing)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (bio_sig_sim)" project-jdk-type="Python SDK" />
 </project>
