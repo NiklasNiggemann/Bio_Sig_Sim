@@ -20,8 +20,6 @@ int piezo_pin = 15;
 
 void setup() 
 {
-  pinMode(tilt_power_pin, OUTPUT);
-  digitalWrite(tilt_power_pin, HIGH);
   pinMode(tilt_pin, INPUT_PULLUP);
   pinMode(led_pin, OUTPUT);
   Serial.begin(115200);
@@ -81,13 +79,14 @@ void loop()
   {
     String ecg_sample_string = SerialPico.readStringUntil('\n'); 
     float ecg_sample_value = ecg_sample_string.toFloat();
-    Serial.println("ECG Sample Value: " + String(ecg_sample_value));
+    client.publish("ecg_signal_esp32", String(ecg_sample_value).c_str());
+    Serial.println("Value: " + String(ecg_sample_value));
     if (ecg_sample_value != 0.0) 
     {
       client.publish(topic, String(ecg_sample_value).c_str());
       if (ecg_sample_value == 4.0)  
       {
-        client.publish("ecg_signal_peak_esp32_input", "peak");
+        client.publish("ecg_peak_esp32", "peak");
         peak_alarm();
       }
     }

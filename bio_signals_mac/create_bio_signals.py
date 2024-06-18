@@ -1,7 +1,8 @@
 import neurokit2 as nk
 import numpy as np
 import random
-
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def get_indices(signal_list):
     indices = []
@@ -79,6 +80,5 @@ def atrial_flutter(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70, mea
 
 def heart_attack(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70):
     return nk.ecg_simulate(duration=duration, sampling_rate=sampling_rate, noise=noise, heart_rate=heart_rate)
-
 
 

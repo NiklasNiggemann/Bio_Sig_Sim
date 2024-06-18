@@ -10,7 +10,7 @@ import create_bio_signals
 
 
 app = Flask(__name__)
-broker = "192.168.2.180"
+broker = "10.67.193.84"
 port = 1883
 
 client = mqtt.Client()
@@ -69,8 +69,10 @@ def generate_signal():
             case _:
                 return jsonify({"error": "Invalid ECG type"}), 400
 
-        bio_data_frame = pd.DataFrame({"ECG": ecg_signal, "RSP": rsp_signal})
+        signals, info = nk.ecg_process(ecg_signal, sampling_rate=1000)
+        bio_data_frame = pd.DataFrame({"ECG": ecg_signal, "RSP": rsp_signal, "Signals": signals, "Info": info})
         nk.signal_plot(bio_data_frame, subplots=True)
+
         plt.show()
 
         ecg_thread = threading.Thread(target=publish_ecg_signal, args=(ecg_signal, client))
