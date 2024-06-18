@@ -4,6 +4,7 @@ import random
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 def get_indices(signal_list):
     indices = []
     for i, value in enumerate(signal_list):
@@ -82,3 +83,6 @@ def heart_attack(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70):
     return nk.ecg_simulate(duration=duration, sampling_rate=sampling_rate, noise=noise, heart_rate=heart_rate)
 
 
+bio_data_frame = pd.DataFrame({"ECG": atrial_fibrillation()})
+nk.signal_plot([bio_data_frame["ECG"]],)
+plt.show()

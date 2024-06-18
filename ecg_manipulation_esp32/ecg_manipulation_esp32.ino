@@ -10,29 +10,24 @@ const char *password = "stud-hshl2024";
 const char *mqtt_broker = "10.67.193.84";
 const int mqtt_port = 1883;
 
-int heart_rate_pot = 15; 
+int heart_rate_pot = 36; 
 
 int servo_angle = 0;     
 int servo_pin = 13; 
 
-int breath_led_01 = 12; 
-int breath_led_02 = 14; 
-int breath_led_03 = 27; 
-int breath_led_04 = 26; 
-int breath_led_05 = 25; 
-int breath_led_06 = 33; 
+int breath_led_01 = 33; 
+int breath_led_02 = 25; 
+int breath_led_03 = 26; 
+int breath_led_04 = 27; 
+int breath_led_05 = 14; 
+int breath_led_06 = 12; 
 
-int normal_button = 6; 
-int tachycardia_button = 7; 
-int bradycardia_button = 8; 
-int fibrillation_button = 15; 
-int flutter_button = 2; 
-
-bool normal = true; 
-bool tachycardia = false; 
-bool bradycardia = false; 
-bool fibrillation = false; 
-bool flutter = false; 
+int normal_button = 15; 
+int tachycardia_button = 2; 
+int bradycardia_button = 16; 
+int fibrillation_button = 18; 
+int flutter_button = 21; 
+int attack_button = 23; 
 
 String type = "normal";
 bool standing = false;
@@ -45,12 +40,26 @@ void setup()
 {
     Serial.begin(115200);
 
+    pinMode(normal_button, INPUT_PULLDOWN);
+    pinMode(tachycardia_button, INPUT_PULLDOWN);
+    pinMode(bradycardia_button, INPUT_PULLDOWN);
+    pinMode(fibrillation_button, INPUT_PULLDOWN);
+    pinMode(flutter_button, INPUT_PULLDOWN);
+    pinMode(attack_button, INPUT_PULLDOWN);
+
+    pinMode(breath_led_01, OUTPUT);
+    pinMode(breath_led_02, OUTPUT);
+    pinMode(breath_led_03, OUTPUT);
+    pinMode(breath_led_04, OUTPUT);
+    pinMode(breath_led_05, OUTPUT);
+    pinMode(breath_led_06, OUTPUT);
+
     ESP32PWM::allocateTimer(0);
-	  ESP32PWM::allocateTimer(1);
-	  ESP32PWM::allocateTimer(2);
-	  ESP32PWM::allocateTimer(3);
-	  servo.setPeriodHertz(50); 
-	  servo.attach(servo_pin, 1000, 2000);  
+    ESP32PWM::allocateTimer(1);
+    ESP32PWM::allocateTimer(2);
+    ESP32PWM::allocateTimer(3);
+    servo.setPeriodHertz(50); 
+    servo.attach(servo_pin, 1000, 2000);  
     servo.write(0);
 
     WiFi.begin(ssid, password);
@@ -77,7 +86,8 @@ void setup()
             delay(2000);
         }
     }
-    client.subscribe("position");
+    client.subscribe("change_position");
+    client.subscribe("rsp_signal");
 }
 
 void move_servo(int start_angle, int end_angle, int step)
@@ -129,21 +139,20 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void change_position(String message)
 {
-  String strPayload = String(message);
-    if (strPayload == "standing")
+  if (message == "standing")
+  {
+    if (!standing)
     {
-      if (!standing)
-      {
-        stand_up();
-      }
+      stand_up();
     }
-    else if (strPayload == "laying")
+  }
+  else if (message == "laying")
+  {
+    if (standing)
     {
-      if (standing)
-      {
-        lay_down(); 
-      }
+      lay_down(); 
     }
+  }
 }
 
 void breathing_leds(int breath_rate)
@@ -164,46 +173,24 @@ void breathing_leds(int breath_rate)
   }
 }
 
-String check_type()
-{
-  if (normal)
-  {
-    return "normal";
-  }
-  if (tachycardia_button)
-  {
-    return "tachycardia";
-  }
-  if (bradycardia_button)
-  {
-    return "bradycardia";
-  }
-  if (fibrillation_button)
-  {
-    return "fibrillation";
-  }
-  if (flutter_button)
-  {
-    return "flutter";
-  }
-}
-
 void loop() 
 {
   client.loop(); 
-  heart_rate = map(analogRead(heart_rate_pot),0,1023,60,120); 
-  if (normal_button || tachycardia_button || bradycardia_button || fibrillation_button || flutter_button == 1)
-  {
-    type = check_type();
+  heart_rate = map(analogRead(heart_rate_pot),0,4095,60,120); 
+  if (digitalRead(normal_button) == HIGH) {
+    type = "Normal";
+  } else if (digitalRead(tachycardia_button) == HIGH) {
+    type = "Tachycardia";
+  } else if (digitalRead(bradycardia_button) == HIGH) {
+    type = "Bradycardia";
+  } else if (digitalRead(fibrillation_button) == HIGH) {
+    type = "Fibrillation";
+  } else if (digitalRead(flutter_button) == HIGH) {
+    type = "Flutter";
+  } else if (digitalRead(attack_button) == HIGH) {
+    type = "Attack";
   }
+  Serial.println(type);
   client.publish("type_manipulation", type.c_str()); 
   client.publish("heart_rate_manipulation", String(heart_rate).c_str()); 
 }
-
-
-
-
-
-
-
-
