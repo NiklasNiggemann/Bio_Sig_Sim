@@ -6,13 +6,13 @@ from umqtt_simple import MQTTClient
 from machine import UART, Pin
 
 # WLAN configuration
-wlanSSID = 'stud-hshl'
-wlanPW = 'stud-hshl2024'
+wlanSSID = 'BioSigSim'
+wlanPW = 'MedicalSystemDesign'
 network.country('DE')
 
-mqttBroker = '10.67.193.84'
+mqttBroker = '172.21.10.7'
 mqttClient = 'pico'
-mqttTopic = b"ecg_signal"
+mqttTopic = b"ecg_signal_pico"
 
 uart = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))
 led_onboard = machine.Pin('LED', machine.Pin.OUT, value=0)

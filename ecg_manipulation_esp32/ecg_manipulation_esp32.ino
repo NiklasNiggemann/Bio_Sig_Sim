@@ -4,10 +4,10 @@
 
 Servo servo;
 
-const char *ssid = "stud-hshl"; 
-const char *password = "stud-hshl2024"; 
+const char *ssid = "BioSigSim"; 
+const char *password = "MedicalSystemDesign"; 
 
-const char *mqtt_broker = "10.67.193.84";
+const char *mqtt_broker = "172.21.10.7";
 const int mqtt_port = 1883;
 
 int heart_rate_pot = 36; 
@@ -62,11 +62,30 @@ void setup()
     servo.attach(servo_pin, 1000, 2000);  
     servo.write(0);
 
+    // Scan for available networks
+    Serial.println("Scanning for WiFi networks...");
+    int numNetworks = WiFi.scanNetworks();
+    if (numNetworks == 0) {
+        Serial.println("No networks found.");
+    } else {
+        Serial.println("Networks found:");
+        for (int i = 0; i < numNetworks; ++i) {
+            Serial.print(i + 1);
+            Serial.print(": ");
+            Serial.print(WiFi.SSID(i));
+            Serial.print(" (");
+            Serial.print(WiFi.RSSI(i));
+            Serial.println(" dBm)");
+        }
+    }
+
+    Serial.println("Connecting to WiFi...");
     WiFi.begin(ssid, password);
+
     while (WiFi.status() != WL_CONNECTED) 
     {
         delay(500);
-        Serial.println("Connecting to WiFi..");
+        Serial.println("Connecting to WiFi...");
     }
     Serial.println("Connected to Wi-Fi");
 
@@ -74,7 +93,7 @@ void setup()
     client.setCallback(callback);
     while (!client.connected()) {
         String client_id = String(WiFi.macAddress());
-        Serial.println("Connecting to Broker..");
+        Serial.println("Connecting to Broker...");
         if (client.connect(client_id.c_str())) 
         {
             Serial.println("Connected to Broker");
@@ -82,7 +101,7 @@ void setup()
         else 
         {
             Serial.print("failed with state ");
-            Serial.print(client.state());
+            Serial.println(client.state());
             delay(2000);
         }
     }
