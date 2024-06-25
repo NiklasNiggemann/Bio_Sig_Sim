@@ -63,6 +63,7 @@ void setup()
     servo.write(0);
 
     // Scan for available networks
+    WiFi.mode(WIFI_STA);
     Serial.println("Scanning for WiFi networks...");
     int numNetworks = WiFi.scanNetworks();
     if (numNetworks == 0) {
