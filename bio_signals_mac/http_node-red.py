@@ -9,7 +9,7 @@ import create_bio_signals
 import socket
 import struct
 
-ip = "127.0.0.1"
+ip = "10.42.0.1"
 
 app = Flask(__name__)
 broker = ip

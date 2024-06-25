@@ -5,9 +5,9 @@
 Servo servo;
 
 const char *ssid = "BioSigSim"; 
-const char *password = "MedicalSystemDesign"; 
+const char *password = "BioSigSim"; 
 
-const char *mqtt_broker = "172.21.10.7";
+const char *mqtt_broker = "10.42.0.1";
 const int mqtt_port = 1883;
 
 int heart_rate_pot = 36; 
