@@ -6,26 +6,32 @@ from umqtt_simple import MQTTClient
 from machine import UART, Pin
 
 # WLAN configuration
-wlanSSID = 'BioSigSim'
-wlanPW = 'MedicalSystemDesign'
+wlanSSID = 'stud-hshl'
+wlanPW = 'stud-hshl2024'
 network.country('DE')
+
+heart_rate = 0
+atrial_completion = 0.0
+ventricular_completion = 0.0
 
 mqttBroker = '172.21.10.7'
 mqttClient = 'pico'
-mqttTopic = b"ecg_signal_pico"
 
 uart = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))
 led_onboard = machine.Pin('LED', machine.Pin.OUT, value=0)
 
 def mqttDo(topic, msg):
     led_onboard.toggle()
-    try:
-        value = json.loads(msg)
-        if isinstance(value, float):
-            print("Received value:", value)
-            uart.write(str(value) + '\n') 
-    except Exception as e:
-        print("Failed to decode JSON message:", e)
+    if (topic == "pico/wled_control"):
+        print("wled")
+    elif (topic == "pico/heart_rate"):
+        heart_rate = json.loads(msg)
+    elif (topic == "pico/atrial_completion"):
+        atrial_completion = json.loads(msg)
+        print("atrial_completion")
+    elif (topic == "pico/ventricular_completion"):
+        ventricular_completion = json.loads(msg)
+        print("ventricular_completion")
 
 def wlanConnect():
     wlan = network.WLAN(network.STA_IF)
@@ -56,11 +62,15 @@ def mqttConnect():
 
 wlanConnect()
 client = mqttConnect()
-client.subscribe(topic=mqttTopic)
+client.subscribe("pico/wled_control")
+client.subscribe("pico/heart_rate")
+client.subscribe("pico/atrial_completion")
+client.subscribe("pico/ventricular_completion")
 
 try:
     while True:
         client.check_msg()
-        time.sleep(1)
+        time.sleep(heart_rate / 60)
 except OSError:
     print('Error: No MQTT connection')
+    

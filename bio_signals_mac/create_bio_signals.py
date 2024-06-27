@@ -79,7 +79,3 @@ def atrial_flutter(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70, mea
     return ecg_signal
 
 
-def heart_attack(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70):
-    return nk.ecg_simulate(duration=duration, sampling_rate=sampling_rate, noise=noise, heart_rate=heart_rate)
-
-

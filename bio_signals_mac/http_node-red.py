@@ -9,7 +9,7 @@ import create_bio_signals
 import socket
 import struct
 
-ip = "10.42.0.1"
+ip = "10.67.193.127"
 
 app = Flask(__name__)
 broker = ip
@@ -31,7 +31,7 @@ except Exception as e:
     print(f"Failed to connect to MQTT broker: {e}")
 
 
-@app.route('/generate_signal', methods=['POST'])
+@app.route('/mac/generate_signal', methods=['POST'])
 def generate_signal():
     try:
         data = request.get_json()
@@ -39,7 +39,6 @@ def generate_signal():
         heart_rate = data.get("heart_rate", 70)
 
         ecg_signal = generate_ecg_signal(ecg_type, heart_rate)
-        rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate / 4, method="sinusoidal")
 
         bio_data_frame = pd.DataFrame({"ECG": ecg_signal})
         nk.signal_plot([bio_data_frame["ECG"]])
@@ -67,15 +66,15 @@ def generate_ecg_signal(ecg_type, heart_rate):
     if ecg_type == "normal":
         return create_bio_signals.normal(heart_rate=heart_rate)
     elif ecg_type == "tachycardia":
-        heart_rate = random.randint(120, 130)
+        heart_rate = random.randint(120, 140)
         return create_bio_signals.normal(heart_rate=heart_rate)
     elif ecg_type == "bradycardia":
-        heart_rate = random.randint(50, 60)
+        heart_rate = random.randint(40, 60)
         return create_bio_signals.normal(heart_rate=heart_rate)
     elif ecg_type == "atrial_fibrillation":
-        return create_bio_signals.atrial_fibrillation()
+        return create_bio_signals.atrial_fibrillation(heart_rate=heart_rate)
     elif ecg_type == "atrial_flutter":
-        return create_bio_signals.atrial_flutter()
+        return create_bio_signals.atrial_flutter(heart_rate=heart_rate)
     else:
         raise ValueError("Invalid ECG type")
 
@@ -126,23 +125,23 @@ def send_png_via_udp(png_file_path, target_ip, target_port, chunk_size=1024):
 
 
 def publish_ecg_data(signals, index):
-    client.publish("ecg_data", str(signals['ECG_Raw'][index]))
-    client.publish("ecg_rate", str(signals['ECG_Rate'][index]))
-    client.publish("p_onset", str(signals['ECG_P_Onsets'][index]))
-    client.publish("p_peak", str(signals['ECG_P_Peaks'][index]))
-    client.publish("p_offset", str(signals['ECG_P_Offsets'][index]))
-    client.publish("q_peak", str(signals['ECG_Q_Peaks'][index]))
-    client.publish("r_onset", str(signals['ECG_R_Onsets'][index]))
-    client.publish("r_peak", str(signals['ECG_R_Peaks'][index]))
-    client.publish("r_offset", str(signals['ECG_R_Offsets'][index]))
-    client.publish("s_peak", str(signals['ECG_S_Peaks'][index]))
-    client.publish("t_onset", str(signals['ECG_T_Onsets'][index]))
-    client.publish("t_peak", str(signals['ECG_T_Peaks'][index]))
-    client.publish("t_offset", str(signals['ECG_T_Offsets'][index]))
-    client.publish("atrial_phase", str(signals['ECG_Phase_Atrial'][index]))
-    client.publish("atrial_phase_completion", str(signals['ECG_Phase_Completion_Atrial'][index]))
-    client.publish("ventricular_phase", str(signals['ECG_Phase_Ventricular'][index]))
-    client.publish("ventricular_phase_completion", str(signals['ECG_Phase_Completion_Ventricular'][index]))
+    client.publish("mac/ecg_data", str(signals['ECG_Raw'][index]))
+    client.publish("mac/ecg_rate", str(signals['ECG_Rate'][index]))
+    client.publish("mac/p_onset", str(signals['ECG_P_Onsets'][index]))
+    client.publish("mac/p_peak", str(signals['ECG_P_Peaks'][index]))
+    client.publish("mac/p_offset", str(signals['ECG_P_Offsets'][index]))
+    client.publish("mac/q_peak", str(signals['ECG_Q_Peaks'][index]))
+    client.publish("mac/r_onset", str(signals['ECG_R_Onsets'][index]))
+    client.publish("mac/r_peak", str(signals['ECG_R_Peaks'][index]))
+    client.publish("mac/r_offset", str(signals['ECG_R_Offsets'][index]))
+    client.publish("mac/s_peak", str(signals['ECG_S_Peaks'][index]))
+    client.publish("mac/t_onset", str(signals['ECG_T_Onsets'][index]))
+    client.publish("mac/t_peak", str(signals['ECG_T_Peaks'][index]))
+    client.publish("mac/t_offset", str(signals['ECG_T_Offsets'][index]))
+    client.publish("mac/atrial_phase", str(signals['ECG_Phase_Atrial'][index]))
+    client.publish("mac/atrial_phase_completion", str(signals['ECG_Phase_Completion_Atrial'][index]))
+    client.publish("mac/ventricular_phase", str(signals['ECG_Phase_Ventricular'][index]))
+    client.publish("mac/ventricular_phase_completion", str(signals['ECG_Phase_Completion_Ventricular'][index]))
 
 
 if __name__ == '__main__':
