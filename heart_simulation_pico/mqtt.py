@@ -5,7 +5,6 @@ import json
 from umqtt_simple import MQTTClient
 from machine import UART, Pin
 
-# WLAN configuration
 wlanSSID = 'stud-hshl'
 wlanPW = 'stud-hshl2024'
 network.country('DE')
@@ -20,7 +19,7 @@ mqttClient = 'pico'
 uart = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))
 led_onboard = machine.Pin('LED', machine.Pin.OUT, value=0)
 
-def mqttDo(topic, msg):
+def callback(topic, msg):
     led_onboard.toggle()
     if (topic == "pico/wled_control"):
         print("wled")
@@ -55,7 +54,7 @@ def wlanConnect():
 def mqttConnect():
     print("Connecting to MQTT broker: %s with client ID: %s" % (mqttBroker, mqttClient))
     client = MQTTClient(mqttClient, mqttBroker, keepalive=60)
-    client.set_callback(mqttDo)
+    client.set_callback(callback)
     client.connect()
     print('MQTT connection established')
     return client
@@ -67,10 +66,18 @@ client.subscribe("pico/heart_rate")
 client.subscribe("pico/atrial_completion")
 client.subscribe("pico/ventricular_completion")
 
+def main():
+    client.check_msg()
+    time.sleep(heart_rate / 60)
+
 try:
     while True:
-        client.check_msg()
-        time.sleep(heart_rate / 60)
+        main()
 except OSError:
     print('Error: No MQTT connection')
     
+    
+
+
+
+
