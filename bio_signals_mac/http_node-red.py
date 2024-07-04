@@ -9,7 +9,9 @@ import create_bio_signals
 import socket
 import struct
 
+
 ip = "10.67.193.127"
+
 
 app = Flask(__name__)
 broker = ip
@@ -35,8 +37,8 @@ except Exception as e:
 def generate_signal():
     try:
         data = request.get_json()
-        ecg_type = data.get("ecg_type", "normal")
-        heart_rate = data.get("heart_rate", 70)
+        ecg_type = data.get("ecg_type")
+        heart_rate = data.get("heart_rate")
 
         ecg_signal = generate_ecg_signal(ecg_type, heart_rate)
 
@@ -55,25 +57,23 @@ def generate_signal():
             publish_ecg_data(signals, i)
             time.sleep(0.005)
 
-        client.publish("mac/ecg_data", "done")
-
         return jsonify({"status": "done"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 def generate_ecg_signal(ecg_type, heart_rate):
-    if ecg_type == "normal":
+    if ecg_type == "Normal":
         return create_bio_signals.normal(heart_rate=heart_rate)
-    elif ecg_type == "tachycardia":
+    elif ecg_type == "Tachycardia":
         heart_rate = random.randint(120, 140)
         return create_bio_signals.normal(heart_rate=heart_rate)
-    elif ecg_type == "bradycardia":
+    elif ecg_type == "Bradycardia":
         heart_rate = random.randint(40, 60)
-        return create_bio_signals.normal(heart_rate=heart_rate)
-    elif ecg_type == "atrial_fibrillation":
+        return create_bio_signals.normal(duration=10, heart_rate=heart_rate)
+    elif ecg_type == "Atrial Fibrillation":
         return create_bio_signals.atrial_fibrillation(heart_rate=heart_rate)
-    elif ecg_type == "atrial_flutter":
+    elif ecg_type == "Atrial Flutter":
         return create_bio_signals.atrial_flutter(heart_rate=heart_rate)
     else:
         raise ValueError("Invalid ECG type")
@@ -125,7 +125,8 @@ def send_png_via_udp(png_file_path, target_ip, target_port, chunk_size=1024):
 
 def publish_ecg_data(signals, index):
     client.publish("mac/ecg_data", str(signals['ECG_Raw'][index]))
-    client.publish("mac/ecg_rate", str(signals['ECG_Rate'][index]))
+    rounded_ecg_rate = round(signals['ECG_Rate'][index])
+    client.publish("mac/ecg_rate", str(rounded_ecg_rate))
     client.publish("mac/p_onset", str(signals['ECG_P_Onsets'][index]))
     client.publish("mac/p_peak", str(signals['ECG_P_Peaks'][index]))
     client.publish("mac/p_offset", str(signals['ECG_P_Offsets'][index]))
@@ -138,9 +139,11 @@ def publish_ecg_data(signals, index):
     client.publish("mac/t_peak", str(signals['ECG_T_Peaks'][index]))
     client.publish("mac/t_offset", str(signals['ECG_T_Offsets'][index]))
     client.publish("mac/atrial_phase", str(signals['ECG_Phase_Atrial'][index]))
-    client.publish("mac/atrial_phase_completion", str(signals['ECG_Phase_Completion_Atrial'][index]))
+    rounded_phase_completion = round(signals['ECG_Phase_Completion_Atrial'][index], 2)
+    client.publish("mac/atrial_phase_completion", str(rounded_phase_completion))
     client.publish("mac/ventricular_phase", str(signals['ECG_Phase_Ventricular'][index]))
-    client.publish("mac/ventricular_phase_completion", str(signals['ECG_Phase_Completion_Ventricular'][index]))
+    rounded_phase_completion = round(signals['ECG_Phase_Completion_Ventricular'][index], 2)
+    client.publish("mac/ventricular_phase_completion", str(rounded_phase_completion))
 
 
 if __name__ == '__main__':

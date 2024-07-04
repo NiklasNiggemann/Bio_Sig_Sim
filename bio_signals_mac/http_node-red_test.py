@@ -1,4 +1,7 @@
+import time
+from flask import Flask, request, jsonify
 import matplotlib.pyplot as plt
+import paho.mqtt.client as mqtt
 import neurokit2 as nk
 import pandas as pd
 import random
@@ -6,57 +9,80 @@ import create_bio_signals
 import socket
 import struct
 
+ip = "10.67.193.127"
 
-def generate_signal(ecg_type="normal", heart_rate=70):
-    ecg_signal = []
-    rsp_signal = []
+app = Flask(__name__)
+broker = ip
+port = 1883
 
+client = mqtt.Client()
+
+
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
+
+client.on_connect = on_connect
+
+try:
+    client.connect(broker, port, 60)
+    client.loop_start()
+except Exception as e:
+    print(f"Failed to connect to MQTT broker: {e}")
+
+
+@app.route('/mac/generate_signal', methods=['POST'])
+def generate_signal():
+    try:
+        data = request.get_json()
+        ecg_type = data.get("ecg_type", "normal")
+        heart_rate = data.get("heart_rate", 70)
+
+        ecg_signal = generate_ecg_signal(ecg_type, heart_rate)
+
+        bio_data_frame = pd.DataFrame({"ECG": ecg_signal})
+        nk.signal_plot([bio_data_frame["ECG"]])
+        plt.savefig('tmp_pictures/signal_plot.png')
+        plt.close()
+
+        signals, info = nk.ecg_process(ecg_signal, sampling_rate=1000)
+        plot_custom_ecg(signals, info)
+
+        send_png_via_udp('tmp_pictures/signal_plot.png', ip, 5005)
+        send_png_via_udp('tmp_pictures/ecg_plot.png', ip, 5006)
+
+        # Create an empty DataFrame to store ECG data
+        ecg_data_df = pd.DataFrame()
+
+        for i in range(len(signals)):
+            publish_ecg_data(signals, i, ecg_data_df)
+            time.sleep(0.005)
+
+        # Save the DataFrame as a CSV file
+        ecg_data_df.to_csv('ecg_data.csv', index=False)
+
+        client.publish("mac/ecg_data", "done")
+
+        return jsonify({"status": "done"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def generate_ecg_signal(ecg_type, heart_rate):
     if ecg_type == "normal":
-        ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
-        rsp_signal = nk.rsp_simulate(duration=2, respiratory_rate=heart_rate/4, method="sinusoidal")
+        return create_bio_signals.normal(heart_rate=heart_rate)
     elif ecg_type == "tachycardia":
-        heart_rate = random.randint(120, 130)
-        ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
-        rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/4, method="sinusoidal")
+        heart_rate = random.randint(120, 140)
+        return create_bio_signals.normal(heart_rate=heart_rate)
     elif ecg_type == "bradycardia":
-        heart_rate = random.randint(50, 60)
-        ecg_signal = create_bio_signals.normal(heart_rate=heart_rate)
-        rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/4, method="sinusoidal")
+        heart_rate = random.randint(40, 60)
+        return create_bio_signals.normal(duration=10, heart_rate=heart_rate)
     elif ecg_type == "atrial_fibrillation":
-        ecg_signal = create_bio_signals.atrial_fibrillation()
-        rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/5.8, method="sinusoidal")
+        return create_bio_signals.atrial_fibrillation(heart_rate=heart_rate)
     elif ecg_type == "atrial_flutter":
-        ecg_signal = create_bio_signals.atrial_flutter()
-        rsp_signal = nk.rsp_simulate(duration=5, respiratory_rate=heart_rate/5.6, method="sinusoidal")
-
-    signals, info = nk.ecg_process(ecg_signal, sampling_rate=1000)
-    for i in range(len(signals)):
-        print("ECG: " + str(signals["ECG_Raw"][i]))
-        print("Atrial: " + str(signals["ECG_Phase_Completion_Atrial"][i]))
-        print("Ventricular: " + str(signals["ECG_Phase_Completion_Ventricular"][i]))
-        print("ECG_P_Onsets: " + str(signals["ECG_P_Onsets"][i]))
-        print("ECG_P_Peaks: " + str(signals["ECG_P_Peaks"][i]))
-        print("ECG_P_Offsets: " + str(signals["ECG_P_Offsets"][i]))
-        print("ECG_Q_Peaks: " + str(signals["ECG_Q_Peaks"][i]))
-        print("ECG_R_Onsets: " + str(signals["ECG_R_Onsets"][i]))
-        print("ECG_R_Peaks: " + str(signals["ECG_R_Peaks"][i]))
-        print("ECG_R_Offsets: " + str(signals["ECG_R_Offsets"][i]))
-        print("ECG_S_Peaks: " + str(signals["ECG_S_Peaks"][i]))
-        print("ECG_T_Onsets: " + str(signals["ECG_T_Onsets"][i]))
-        print("ECG_T_Peaks: " + str(signals["ECG_T_Peaks"][i]))
-        print("ECG_T_Offsets: " + str(signals["ECG_T_Offsets"][i]))
-        print("ECG_Rate: " + str(signals["ECG_Rate"][i]))
-
-    bio_data_frame = pd.DataFrame({"ECG": ecg_signal})
-    nk.signal_plot([bio_data_frame["ECG"]])
-    plt.savefig('tmp_pictures/signal_plot.png')
-    plt.close()
-
-    signals, info = nk.ecg_process(ecg_signal, sampling_rate=1000)
-    plot_custom_ecg(signals, info)
-
-    #send_png_via_udp('signal_plot.png', '127.0.0.1', 5005)
-    #send_png_via_udp('ecg_plot.png', '127.0.0.1', 5006)
+        return create_bio_signals.atrial_flutter(heart_rate=heart_rate)
+    else:
+        raise ValueError("Invalid ECG type")
 
 
 def plot_custom_ecg(signals, info):
@@ -64,7 +90,6 @@ def plot_custom_ecg(signals, info):
     plt.plot(signals['ECG_Raw'], label='ECG Raw', color='black', linewidth=0.5)
     plt.plot(signals['ECG_Clean'], label='ECG Clean', color='blue', linewidth=1.0)
 
-    # Mark important points
     plt.scatter(signals.index[signals['ECG_R_Peaks'].notna()], signals['ECG_Clean'][signals['ECG_R_Peaks'].notna()],
                 color='red', label='R Peaks', marker='o')
     plt.scatter(signals.index[signals['ECG_T_Peaks'].notna()], signals['ECG_Clean'][signals['ECG_T_Peaks'].notna()],
@@ -78,7 +103,7 @@ def plot_custom_ecg(signals, info):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig('ecg_plot.png')
+    plt.savefig('tmp_pictures/ecg_plot.png')
     plt.close()
 
 
@@ -99,10 +124,39 @@ def send_png_via_udp(png_file_path, target_ip, target_port, chunk_size=1024):
             message = struct.pack('!II', i, num_chunks) + chunk
 
             sock.sendto(message, (target_ip, target_port))
-            print(f"Sent chunk {i+1}/{num_chunks} ({len(chunk)} bytes)")
 
     finally:
         sock.close()
 
 
-generate_signal()
+def publish_ecg_data(signals, index, ecg_data_df):
+    ecg_data = {
+        'ECG_Raw': signals['ECG_Raw'][index],
+        'ECG_Rate': round(signals['ECG_Rate'][index]),
+        'P_Onset': signals['ECG_P_Onsets'][index],
+        'P_Peak': signals['ECG_P_Peaks'][index],
+        'P_Offset': signals['ECG_P_Offsets'][index],
+        'Q_Peak': signals['ECG_Q_Peaks'][index],
+        'R_Onset': signals['ECG_R_Onsets'][index],
+        'R_Peak': signals['ECG_R_Peaks'][index],
+        'R_Offset': signals['ECG_R_Offsets'][index],
+        'S_Peak': signals['ECG_S_Peaks'][index],
+        'T_Onset': signals['ECG_T_Onsets'][index],
+        'T_Peak': signals['ECG_T_Peaks'][index],
+        'T_Offset': signals['ECG_T_Offsets'][index],
+        'Atrial_Phase': signals['ECG_Phase_Atrial'][index],
+        'Atrial_Phase_Completion': round(signals['ECG_Phase_Completion_Atrial'][index], 2),
+        'Ventricular_Phase': signals['ECG_Phase_Ventricular'][index],
+        'Ventricular_Phase_Completion': round(signals['ECG_Phase_Completion_Ventricular'][index], 2)
+    }
+
+    # Append the data to the DataFrame
+    ecg_data_df = ecg_data_df.append(ecg_data, ignore_index=True)
+
+    # Publish data to MQTT
+    for key, value in ecg_data.items():
+        client.publish(f"mac/{key.lower()}", str(value))
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

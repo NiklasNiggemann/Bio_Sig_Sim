@@ -22,7 +22,7 @@ int flutter_button_pin = 14;
 WiFiClient espClient; 
 PubSubClient client(espClient); 
 
-volatile bool normal_button_pressed = false;
+volatile bool normal_button_pressed = true;
 volatile bool tachycardia_button_pressed = false;
 volatile bool bradycardia_button_pressed = false;
 volatile bool fibrillation_button_pressed = false;
@@ -86,27 +86,27 @@ void loop()
 
   if (normal_button_pressed) {
     normal_button_pressed = false;
-    client.publish("esp32/type_manipulation", "normal"); 
+    client.publish("esp32/type_manipulation", "Normal"); 
   }
 
   if (tachycardia_button_pressed) {
     tachycardia_button_pressed = false;
-    client.publish("esp32/type_manipulation", "tachycardia"); 
+    client.publish("esp32/type_manipulation", "Tachycardia"); 
   }
 
   if (bradycardia_button_pressed) {
     bradycardia_button_pressed = false;
-    client.publish("esp32/type_manipulation", "bradycardia"); 
+    client.publish("esp32/type_manipulation", "Bradycardia"); 
   }
 
   if (fibrillation_button_pressed) {
     fibrillation_button_pressed = false;
-    client.publish("esp32/type_manipulation", "fibrillation"); 
+    client.publish("esp32/type_manipulation", "Atrial Fibrillation"); 
   }
 
   if (flutter_button_pressed) {
     flutter_button_pressed = false;
-    client.publish("esp32/type_manipulation", "flutter"); 
+    client.publish("esp32/type_manipulation", "Atrial Flutter"); 
   }
 
   if (tilt_changed) {
@@ -193,4 +193,7 @@ void setup_pins()
   pinMode(heart_rate_pot_pin, INPUT);
   pinMode(tilt_pin_power, OUTPUT);
   digitalWrite(tilt_pin_power, HIGH);
+  String heartRate = String(70); 
+  client.publish("esp32/heart_rate_manipulation", heartRate.c_str()); 
+  client.publish("esp32/type_manipulation", "normal"); 
 }
