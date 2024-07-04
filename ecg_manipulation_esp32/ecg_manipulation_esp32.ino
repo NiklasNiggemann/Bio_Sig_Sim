@@ -1,11 +1,8 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <ESP32Servo.h>
-
-Servo servo;
 
 const char *ssid = "stud-hshl"; 
-const char *password = "stud-hshl2024"; 
+const char *password = "stud-hshl2024";  
 
 const char *mqtt_broker = "10.67.193.127"; 
 const int mqtt_port = 1883; 
@@ -13,10 +10,8 @@ const int mqtt_port = 1883;
 int heart_rate_pot_pin = 33; 
 int heart_rate = 0; 
 
-int servo_angle = 0; 
-int servo_pin = 32; 
-bool standing = false; 
 int tilt_pin = 35; 
+int tilt_pin_power = 21; 
 
 int normal_button_pin = 26; 
 int tachycardia_button_pin = 27; 
@@ -39,20 +34,8 @@ void setup()
 {
   Serial.begin(115200);
   setup_pins();
-  setup_servo();
   setup_wifi();
   setup_mqtt();
-}
-
-void setup_servo()
-{
-  ESP32PWM::allocateTimer(0);
-  ESP32PWM::allocateTimer(1);
-  ESP32PWM::allocateTimer(2);
-  ESP32PWM::allocateTimer(3);
-  servo.setPeriodHertz(50); 
-  servo.attach(servo_pin, 1000, 2000);  
-  servo.write(0);
 }
 
 void setup_wifi()
@@ -86,52 +69,7 @@ void setup_mqtt()
   reconnect_mqtt();
 }
 
-void callback(char *topic, byte *payload, unsigned int length) 
-{
-  change_position(payload, length);
-}
-
-void move_servo(int start_angle, int end_angle, int step)
-{
-  for (int angle = start_angle; angle != end_angle; angle += step) 
-  { 
-    servo.write(angle);   
-    delay(5);             
-  }
-}
-
-void stand_up()
-{
-  move_servo(180, 0, -1);
-  standing = true;
-}
-
-void lay_down()
-{
-  move_servo(0, 180, 1);
-  standing = false;
-}
-
-void change_position(byte *payload, unsigned int length)
-{
-  char message[length + 1];
-  memcpy(message, payload, length);
-  message[length] = '\0';
-  if (strcmp(message, "standing") == 0)
-  {
-    if (!standing)
-    {
-      stand_up();
-    }
-  }
-  else if (strcmp(message, "laying") == 0)
-  {
-    if (standing)
-    {
-      lay_down(); 
-    }
-  }
-}
+void callback(char *topic, byte *payload, unsigned int length) { }
 
 void loop() 
 {
@@ -250,11 +188,9 @@ void setup_pins()
   attachInterrupt(digitalPinToInterrupt(fibrillation_button_pin), fibrillation_interrupt, FALLING);
   pinMode(flutter_button_pin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(flutter_button_pin), flutter_interrupt, FALLING);
-
   pinMode(tilt_pin, INPUT);
   attachInterrupt(digitalPinToInterrupt(tilt_pin), tilt_interrupt, CHANGE);
-
   pinMode(heart_rate_pot_pin, INPUT);
-
-  pinMode(servo_pin, OUTPUT);
+  pinMode(tilt_pin_power, OUTPUT);
+  digitalWrite(tilt_pin_power, HIGH);
 }

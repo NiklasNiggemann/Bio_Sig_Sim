@@ -55,7 +55,7 @@ def generate_signal():
             publish_ecg_data(signals, i)
             time.sleep(0.005)
 
-        client.publish("ecg_data", "done")
+        client.publish("mac/ecg_data", "done")
 
         return jsonify({"status": "done"}), 200
     except Exception as e:
@@ -118,7 +118,6 @@ def send_png_via_udp(png_file_path, target_ip, target_port, chunk_size=1024):
             message = struct.pack('!II', i, num_chunks) + chunk
 
             sock.sendto(message, (target_ip, target_port))
-            print(f"Sent chunk {i+1}/{num_chunks} ({len(chunk)} bytes)")
 
     finally:
         sock.close()
