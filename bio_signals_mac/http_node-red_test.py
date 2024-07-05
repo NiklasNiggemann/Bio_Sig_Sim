@@ -9,29 +9,6 @@ import create_bio_signals
 import socket
 import struct
 
-ip = "10.67.193.127"
-
-app = Flask(__name__)
-broker = ip
-port = 1883
-
-client = mqtt.Client()
-
-
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
-
-
-client.on_connect = on_connect
-
-try:
-    client.connect(broker, port, 60)
-    client.loop_start()
-except Exception as e:
-    print(f"Failed to connect to MQTT broker: {e}")
-
-
-@app.route('/mac/generate_signal', methods=['POST'])
 def generate_signal():
     try:
         data = request.get_json()
@@ -149,13 +126,6 @@ def publish_ecg_data(signals, index, ecg_data_df):
         'Ventricular_Phase': signals['ECG_Phase_Ventricular'][index],
         'Ventricular_Phase_Completion': round(signals['ECG_Phase_Completion_Ventricular'][index], 2)
     }
-
-    # Append the data to the DataFrame
-    ecg_data_df = ecg_data_df.append(ecg_data, ignore_index=True)
-
-    # Publish data to MQTT
-    for key, value in ecg_data.items():
-        client.publish(f"mac/{key.lower()}", str(value))
 
 
 if __name__ == '__main__':
