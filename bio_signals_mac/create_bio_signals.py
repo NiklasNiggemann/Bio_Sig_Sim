@@ -79,6 +79,3 @@ def atrial_flutter(duration=5, sampling_rate=1000, noise=0.1, heart_rate=70, mea
     return ecg_signal
 
 
-bio_data_frame = pd.DataFrame(atrial_fibrillation())
-nk.signal_plot(bio_data_frame, labels="Vorhofflimmern")
-plt.show()
