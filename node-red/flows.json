@@ -1,0 +1,975 @@
+[
+    {
+        "id": "f2fcf607bf978362",
+        "type": "tab",
+        "label": "Bio Signal Generation",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "e4449afdd6b246ee",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Generate ECG Signal",
+        "func": "var ecg_type = flow.get(\"ecg_type\");\nvar heart_rate = flow.get(\"heart_rate\");\n\nvar combinedPayload = {\n    ecg_type: ecg_type,\n    heart_rate: heart_rate\n};\n\nmsg.payload = combinedPayload;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 280,
+        "wires": [
+            [
+                "2aa02e19e0d02c5c",
+                "64e4cd75f24b7a37"
+            ]
+        ]
+    },
+    {
+        "id": "2aa02e19e0d02c5c",
+        "type": "http request",
+        "z": "f2fcf607bf978362",
+        "name": "HTTP Request to Mac",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "10.67.193.0:5000/mac/generate_signal",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1280,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e0c34b32bda6c81d",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "Python generated ECG (Single Values)",
+        "topic": "mac/ecg_data",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 500,
+        "wires": [
+            [
+                "580ecbf1d83ba7dd"
+            ]
+        ]
+    },
+    {
+        "id": "a82153f3cc601464",
+        "type": "ui_chart",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "group": "5ff7850e5ed87fa6",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Detailed ECG View",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "-0.5",
+        "ymax": "1.5",
+        "removeOlder": "4",
+        "removeOlderPoints": "500",
+        "removeOlderUnit": "1",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 790,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6fbd205d3db3e057",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "Change Type",
+        "topic": "esp32/type_manipulation",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 270,
+        "y": 140,
+        "wires": [
+            [
+                "4f6c6bebc58fc27a",
+                "a17334b60190d5ae"
+            ]
+        ]
+    },
+    {
+        "id": "4c4f13c693d42c78",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "Change Heart Rate",
+        "topic": "esp32/heart_rate_manipulation",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 250,
+        "y": 420,
+        "wires": [
+            [
+                "1e75a5cf9897f57f",
+                "58730b47b9a7163a"
+            ]
+        ]
+    },
+    {
+        "id": "a17334b60190d5ae",
+        "type": "change",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "ecg_type",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 550,
+        "y": 140,
+        "wires": [
+            [
+                "b144ebdd0770607d"
+            ]
+        ]
+    },
+    {
+        "id": "58730b47b9a7163a",
+        "type": "change",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "heart_rate",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 540,
+        "y": 420,
+        "wires": [
+            [
+                "53549f96dbf6ef8a"
+            ]
+        ]
+    },
+    {
+        "id": "580ecbf1d83ba7dd",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Float",
+        "func": "\nif (typeof msg.payload === 'string') \n{\n    var floatVal = parseFloat(msg.payload);\n\n    if (!isNaN(floatVal)) \n    {\n        msg.payload = floatVal;\n    }\n} \n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 500,
+        "wires": [
+            [
+                "a82153f3cc601464"
+            ]
+        ]
+    },
+    {
+        "id": "6f69a4d6ae2586a1",
+        "type": "udp in",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "iface": "",
+        "port": "5005",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "buffer",
+        "x": 1020,
+        "y": 400,
+        "wires": [
+            [
+                "db06d6991af47b13"
+            ]
+        ]
+    },
+    {
+        "id": "db06d6991af47b13",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Re-Assemble Chunks",
+        "func": "// Initialize context if not already initialized\ncontext.packets = context.packets || {};\n\n// Unpack the message\nvar buffer = msg.payload;\nvar sequenceNumber = buffer.readUInt32BE(0);\nvar totalChunks = buffer.readUInt32BE(4);\nvar chunkData = buffer.slice(8);\n\n// Store the chunk data in the context\ncontext.packets[sequenceNumber] = chunkData;\n\n// Check if all chunks have been received\nif (Object.keys(context.packets).length === totalChunks) {\n    // Convert keys to numbers, sort them, and concatenate all chunks to form the complete file\n    var completeFile = Buffer.concat(\n        Object.keys(context.packets)\n            .map(key => parseInt(key, 10))\n            .sort((a, b) => a - b)\n            .map(key => context.packets[key])\n    );\n\n    // Reset context for next file\n    context.packets = {};\n\n    // Send the complete file\n    msg.payload = completeFile;\n    return msg;\n}\n\n// Do not pass the message along if file is not yet complete\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 400,
+        "wires": [
+            [
+                "690ae722b5a3545c"
+            ]
+        ]
+    },
+    {
+        "id": "690ae722b5a3545c",
+        "type": "file",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "filename": "/home/niklas/.node-red/static/signal_plot.png",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1580,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3251cd24948c6f62",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Re-Assemble Chunks",
+        "func": "// Initialize context if not already initialized\ncontext.packets = context.packets || {};\n\n// Unpack the message\nvar buffer = msg.payload;\nvar sequenceNumber = buffer.readUInt32BE(0);\nvar totalChunks = buffer.readUInt32BE(4);\nvar chunkData = buffer.slice(8);\n\n// Store the chunk data in the context\ncontext.packets[sequenceNumber] = chunkData;\n\n// Check if all chunks have been received\nif (Object.keys(context.packets).length === totalChunks) {\n    // Convert keys to numbers, sort them, and concatenate all chunks to form the complete file\n    var completeFile = Buffer.concat(\n        Object.keys(context.packets)\n            .map(key => parseInt(key, 10))\n            .sort((a, b) => a - b)\n            .map(key => context.packets[key])\n    );\n\n    // Reset context for next file\n    context.packets = {};\n\n    // Send the complete file\n    msg.payload = completeFile;\n    return msg;\n}\n\n// Do not pass the message along if file is not yet complete\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 480,
+        "wires": [
+            [
+                "63a352af616299c5"
+            ]
+        ]
+    },
+    {
+        "id": "7b021a11534d2743",
+        "type": "udp in",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "iface": "",
+        "port": "5006",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "buffer",
+        "x": 1020,
+        "y": 480,
+        "wires": [
+            [
+                "3251cd24948c6f62"
+            ]
+        ]
+    },
+    {
+        "id": "63a352af616299c5",
+        "type": "file",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "filename": "/home/niklas/.node-red/static/ecg_plot.png",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1570,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1e75a5cf9897f57f",
+        "type": "ui_text",
+        "z": "f2fcf607bf978362",
+        "group": "5ff7850e5ed87fa6",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Desired Heart Rate:",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 550,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "4f6c6bebc58fc27a",
+        "type": "ui_text",
+        "z": "f2fcf607bf978362",
+        "group": "5ff7850e5ed87fa6",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Selected Type:",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 560,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "ac2b200dfbdd3b78",
+        "type": "wled2",
+        "z": "f2fcf607bf978362",
+        "address": "10.67.193.83",
+        "segmentId": 0,
+        "brightness": 128,
+        "delay": 0,
+        "color1": "#ff0000",
+        "color2": "#ff0000",
+        "color3": "#ff0000",
+        "effect": "1",
+        "effectIntensity": 128,
+        "effectSpeed": "28",
+        "name": "WLED Off",
+        "palette": "0",
+        "preset": 0,
+        "state": "off",
+        "debug": "off",
+        "x": 1700,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fc2d0afb25d59d41",
+        "type": "wled2",
+        "z": "f2fcf607bf978362",
+        "address": "10.67.193.83",
+        "segmentId": 0,
+        "brightness": 128,
+        "delay": 0,
+        "color1": "#ff0000",
+        "color2": "#ff0000",
+        "color3": "#ff0000",
+        "effect": "1",
+        "effectIntensity": 128,
+        "effectSpeed": "28",
+        "name": "WLED On",
+        "palette": "0",
+        "preset": 0,
+        "state": "on",
+        "debug": "off",
+        "x": 1700,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9d9715d26aa17f8d",
+        "type": "switch",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "off",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1510,
+        "y": 240,
+        "wires": [
+            [
+                "fc2d0afb25d59d41"
+            ],
+            [
+                "ac2b200dfbdd3b78"
+            ]
+        ]
+    },
+    {
+        "id": "64e4cd75f24b7a37",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Generate WLED Impulses",
+        "func": "let bpm = flow.get(\"heart_rate\");; // Assuming the BPM value is sent in the msg.payload\nlet interval = 60000 / bpm; // Calculate interval in milliseconds\n\n// Create or retrieve the context variable for the interval ID\nlet intervalId = context.get('intervalId');\n\nif (intervalId) {\n    clearInterval(intervalId); // Clear the existing interval if it exists\n}\n\n// Define the function to be called at each interval\nfunction toggleState() {\n    // Retrieve the current state from the context\n    let currentState = context.get('state') || \"off\";\n    \n    // Toggle the state\n    let newState = currentState === \"on\" ? \"off\" : \"on\";\n    \n    // Store the new state in the context\n    context.set('state', newState);\n    \n    // Send the new state as the output message\n    node.send({payload: newState});\n}\n\n// Set the new interval\nintervalId = setInterval(toggleState, interval);\n\n// Store the new interval ID in the context\ncontext.set('intervalId', intervalId);\n\n// Immediate execution\ntoggleState();\n\n// Return nothing as the function node will be sending messages from within the interval function\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1290,
+        "y": 240,
+        "wires": [
+            [
+                "9d9715d26aa17f8d"
+            ]
+        ]
+    },
+    {
+        "id": "9462e02f17f279bf",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Float-Percentage",
+        "func": "if (typeof msg.payload === 'string') {\n    var floatVal = parseFloat(msg.payload);\n    var percentageVal = floatVal * 100;\n    msg.payload = percentageVal;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 780,
+        "wires": [
+            [
+                "f5d1c5d65d3a7b11"
+            ]
+        ]
+    },
+    {
+        "id": "f5d1c5d65d3a7b11",
+        "type": "ui_gauge",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "group": "c6300858b18bc836",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Atrial Phase",
+        "label": "Percentage",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 1250,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "71a106c8a2795a37",
+        "type": "ui_gauge",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "group": "c6300858b18bc836",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Ventricular Phase",
+        "label": "Percentage",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 1270,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "af9674ca6ba826e8",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Float-Percentage",
+        "func": "if (typeof msg.payload === 'string') {\n    var floatVal = parseFloat(msg.payload);\n    var percentageVal = floatVal * 100;\n    msg.payload = percentageVal;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 660,
+        "wires": [
+            [
+                "71a106c8a2795a37"
+            ]
+        ]
+    },
+    {
+        "id": "790f4342c48cbf52",
+        "type": "mqtt out",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "topic": "pico/ventricular_completion",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "239970d2e6625f19",
+        "x": 1300,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "86f2fc7bd2ffa218",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Float-Percentage",
+        "func": "\nvar msg = {\n    payload: JSON.stringify({ ventricular_completion: msg.payload })\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 720,
+        "wires": [
+            [
+                "790f4342c48cbf52"
+            ]
+        ]
+    },
+    {
+        "id": "a14734fa3e973402",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Float-Percentage",
+        "func": "\nvar msg = {\n    payload: JSON.stringify({ atrial_completion: msg.payload })\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 840,
+        "wires": [
+            [
+                "1dcf5025d79a33db"
+            ]
+        ]
+    },
+    {
+        "id": "1dcf5025d79a33db",
+        "type": "mqtt out",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "topic": "pico/atrial_completion",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "239970d2e6625f19",
+        "x": 1280,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "43986acbd6c93c46",
+        "type": "function",
+        "z": "f2fcf607bf978362",
+        "name": "Convert String To Int",
+        "func": "if (typeof msg.payload === 'string') {\n    let intVal = Math.round(Number(msg.payload));\n\n    if (!isNaN(intVal)) {\n        msg.payload = intVal;\n    }\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 600,
+        "wires": [
+            [
+                "93da26323c77d7de"
+            ]
+        ]
+    },
+    {
+        "id": "93da26323c77d7de",
+        "type": "ui_text",
+        "z": "f2fcf607bf978362",
+        "group": "5ff7850e5ed87fa6",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Actual Heart Rate:",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1270,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "99fa696001404396",
+        "type": "ui_text",
+        "z": "f2fcf607bf978362",
+        "group": "a34f105af8d1f7fa",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "name": "Position",
+        "label": "Position: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1020,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "2979c224e848b268",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "Measured Position by ESP32",
+        "topic": "esp32/measured_position",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 760,
+        "y": 1200,
+        "wires": [
+            [
+                "99fa696001404396"
+            ]
+        ]
+    },
+    {
+        "id": "3192ca2a3bfb15bf",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "topic": "mac/ecg_rate",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 650,
+        "y": 600,
+        "wires": [
+            [
+                "43986acbd6c93c46"
+            ]
+        ]
+    },
+    {
+        "id": "b04e0966c52c1ebf",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "topic": "mac/ventricular_phase_completion",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 580,
+        "y": 660,
+        "wires": [
+            [
+                "af9674ca6ba826e8",
+                "86f2fc7bd2ffa218"
+            ]
+        ]
+    },
+    {
+        "id": "9036d79946ba93f4",
+        "type": "mqtt in",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "topic": "mac/atrial_phase_completion",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "239970d2e6625f19",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 600,
+        "y": 780,
+        "wires": [
+            [
+                "9462e02f17f279bf",
+                "a14734fa3e973402"
+            ]
+        ]
+    },
+    {
+        "id": "b2aa75bff0f8f0ba",
+        "type": "ui_button",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "group": "03ef905fa33783cf",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Start",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "start",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 550,
+        "y": 280,
+        "wires": [
+            [
+                "53549f96dbf6ef8a",
+                "b144ebdd0770607d"
+            ]
+        ]
+    },
+    {
+        "id": "53549f96dbf6ef8a",
+        "type": "trigger",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "op1": "1",
+        "op2": "0",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "0",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "start",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 780,
+        "y": 320,
+        "wires": [
+            [
+                "e4449afdd6b246ee"
+            ]
+        ]
+    },
+    {
+        "id": "b144ebdd0770607d",
+        "type": "trigger",
+        "z": "f2fcf607bf978362",
+        "name": "",
+        "op1": "ecg_type",
+        "op2": "0",
+        "op1type": "flow",
+        "op2type": "str",
+        "duration": "0",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "start",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 780,
+        "y": 240,
+        "wires": [
+            [
+                "e4449afdd6b246ee"
+            ]
+        ]
+    },
+    {
+        "id": "239970d2e6625f19",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "192.168.2.189",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "5ff7850e5ed87fa6",
+        "type": "ui_group",
+        "name": "ECG Data",
+        "tab": "8fe7beee31d5455b",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "c6300858b18bc836",
+        "type": "ui_group",
+        "name": "Cardiac Cycle",
+        "tab": "8fe7beee31d5455b",
+        "order": 5,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "a34f105af8d1f7fa",
+        "type": "ui_group",
+        "name": "Position",
+        "tab": "8fe7beee31d5455b",
+        "order": 5,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "03ef905fa33783cf",
+        "type": "ui_group",
+        "name": "Control",
+        "tab": "8fe7beee31d5455b",
+        "order": 6,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "8fe7beee31d5455b",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
