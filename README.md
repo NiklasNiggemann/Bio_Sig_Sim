@@ -39,7 +39,8 @@ The project has been successfully implemented, providing users with insights int
 
 The present project was originally developed as part of the Embedded Systems II course in the Intelligent System Design program at Hamm-Lippstadt University of Applied Sciences. In this context, the poster presented below was created to introduce the project: 
 
-[Niggemann_Poster.pdf](https://github.com/user-attachments/files/16248171/Niggemann_Poster.pdf)
+[Niggemann_Poster.pdf](https://github.com/user-attachments/files/16248193/Niggemann_Poster.pdf)
+
 
 
 
