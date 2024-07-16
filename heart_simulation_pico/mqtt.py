@@ -6,11 +6,11 @@ from umqtt_simple import MQTTClient
 from machine import UART, Pin, PWM
 
 # WiFi and MQTT configuration
-wlanSSID = 'stud-hshl'
-wlanPW = 'stud-hshl2024'
+wlanSSID = 'BioSigSim'
+wlanPW = 'BioSigSim'
 network.country('DE')
 
-mqttBroker = '10.67.193.127'
+mqttBroker = '192.168.1.146'
 mqttClientID = 'pico'
 
 # Servo setup

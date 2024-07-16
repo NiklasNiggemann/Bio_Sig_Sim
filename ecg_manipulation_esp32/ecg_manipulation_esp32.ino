@@ -19,6 +19,8 @@ int bradycardia_button_pin = 12;
 int fibrillation_button_pin = 25; 
 int flutter_button_pin = 14; 
 
+bool standing = false;
+
 WiFiClient espClient; 
 PubSubClient client(espClient); 
 
@@ -113,15 +115,18 @@ void loop()
     tilt_changed = false;
     if (digitalRead(tilt_pin) == HIGH) 
     {
+      standing = false;
       client.publish("esp32/measured_position", "laying"); 
     } 
     else 
     {
+      standing = true;
       client.publish("esp32/measured_position", "standing"); 
     }
   }
   heart_rate = analogRead(heart_rate_pot_pin);
   int mapped_heart_rate = map(heart_rate, 0, 4095, 60, 120);
+  if (standing) mapped_heart_rate += 3;
   String heart_rate_str = String(mapped_heart_rate);
   client.publish("esp32/heart_rate_manipulation", heart_rate_str.c_str()); 
 }
