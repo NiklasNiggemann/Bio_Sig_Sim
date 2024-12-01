@@ -1,10 +1,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char *ssid = "stud-hshl"; 
-const char *password = "stud-hshl2024";  
+const char *ssid = ""; 
+const char *password = "";  
 
-const char *mqtt_broker = "10.67.193.127"; 
+const char *mqtt_broker = ""; 
 const int mqtt_port = 1883; 
 
 int heart_rate_pot_pin = 33; 
