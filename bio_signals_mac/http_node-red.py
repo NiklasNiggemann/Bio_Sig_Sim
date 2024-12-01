@@ -10,7 +10,7 @@ import socket
 import struct
 
 
-ip = "10.67.193.127"
+ip = ""
 
 
 app = Flask(__name__)
